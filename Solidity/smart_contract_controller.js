@@ -37,22 +37,26 @@ function disconnect(){
 	walletLink.disconnect()
 }
 
-function createVote(){
-	artinToken.methods.createVote("", "").call(logResult)
+function createVote(string desc, string[] options){
+	var choices = [];
+	for (int i = 0; i < options.length; ++i){
+		choices[i] = web3.fromAscii(options[i]);
+	}
+	artinToken.methods.createVote(web3.fromAscii(desc), choices).call(logResult);
 }
 
-function getVote(int index){
+function getVote(int index, string nameDesc, string[] nameOptions){
 	artinToken.methods.choiceCount(index).call(function(err, res){
 		var jVal = JSON.parse(res);
 		var count = jVal[0].result;
 		artinToken.methods.descriptionOf(index).call(function(err, res){
 			var jVal1 = JSON.parse(res);
-			jVal1[0].result;
+			document.getElementById(nameDesc).innerHTML = jVal1[0].result;
 		})
 		for (int i = 0; i < count; ++i){
 			artinToken.methods.choiceOf(index, i).call(function(err, res){
 				var jVal1 = JSON.parse(res);
-				jVal1[0].result;
+				document.getElementById(nameOptions[i]).innerHTML = jVal1[0].result;
 			})
 		}
 	})

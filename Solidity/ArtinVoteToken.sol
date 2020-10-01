@@ -34,6 +34,8 @@ contract ArtinVoteToken is IERC20, Owned {
 	mapping(uint => Vote) votes;
 	uint public voteCount;
 	mapping(uint => mapping(address => uint8)) choiceIndices;
+	address[] users;
+	mapping(address => bool) isKnown;
 	
     constructor() public {
         symbol = "ARTv1";
@@ -42,6 +44,9 @@ contract ArtinVoteToken is IERC20, Owned {
         _totalSupply = 11000000 * 10 ** 18;
         notDistributed = _totalSupply;
 		owner = msg.sender;
+		uint more = 1000000 * 10 ** 18;
+		balances[owner] = more;
+		_totalSupply = _totalSupply + more;
     }
 	
 	function winningIndexOf(uint index) external view returns (uint8 result) {
@@ -73,6 +78,7 @@ contract ArtinVoteToken is IERC20, Owned {
 	function voteFor(uint index, uint8 indexChoice) external {
 		require(index < voteCount, "Index of non-existent vote.");
 		require(indexChoice < votes[index].choices.length, "Index of non-existent choice.");
+		require(votes[index].isActive, "Vote is already not active.");
 		removeVote(index, msg.sender);
 		addVote(index, indexChoice, msg.sender);
 		choiceIndices[index][msg.sender] = indexChoice + 1;
@@ -130,8 +136,44 @@ contract ArtinVoteToken is IERC20, Owned {
 	    ops[2] = "Option 3.";
 	    createVote("Test vote1", ops);
 	}
+	function rewardCorrectAndClose(uint index, uint amount) external onlyOwner {
+		require(index < voteCount, "Index of non-existent vote.");
+		require(votes[index].isActive, "Vote already closed.");
+		
+		closeVotePrivate(index);
+		reward(index, amount, false, false);
+	}
+	function rewardAndClose(uint index, uint amount) external onlyOwner {
+		require(index < voteCount, "Index of non-existent vote.");
+		require(votes[index].isActive, "Vote already closed.");
+		
+		closeVotePrivate(index);
+		reward(index, amount, true, true);
+	}
+	function reward(uint index, uint amount, bool isNoAnswerPenalized, bool isWrongPenalized) private onlyOwner {
+		uint8 winningI = votes[index].winningIndex;
+		uint winWeight = votes[index].choices[winningI].weight;
+		for (int i = 0; i < users.length; ++i){
+			uin8 choiceI = choiceIndices[index][users[i]];
+			if (choiceI == 0){ // Nothing chosen
+				if (isNoAnswerPenalized && balances[users[i]] >= 20 * 10 ** 18){ 
+					balances[users[i]] = SafeMath.sub(balances[users[i]], 20 * 10 ** 18);
+				}
+			} else if (choiceI + 1 == winningI && winWeight > amount){ // Right answer
+				balances[users[i]] = SafeMath.add(balances[users[i]], winWeight - amount);
+			} else { // Wrong answer
+				if (isWrongPenalized && balances[users[i]] >= 10 * 10 ** 18){
+					balances[users[i]] = SafeMath.sub(balances[users[i]], 10 * 10 ** 18);
+				}
+			}
+		}
+	}
 	function closeVote(uint index) external onlyOwner {
 		require(index < voteCount, "Index of non-existent vote.");
+		require(votes[index].isActive, "Vote already closed.");
+		closeVotePrivate(index);
+	}
+	function closeVotePrivate(uint index) private onlyOwner {
 		votes[index].isActive = false;
 		uint maxVote = votes[index].choices[0].weight;
 		uint8 maxIndex = 0;
@@ -157,6 +199,10 @@ contract ArtinVoteToken is IERC20, Owned {
         balances[to] = SafeMath.add(balances[to], tokens);
 		addAllVotes(msg.sender, to);
         emit Transfer(msg.sender, to, tokens);
+		if (!isKnown[to]){
+			users.push(to);
+			isKnown[to] = true;
+		}
         return true;
     }
     function approve(address spender, uint tokens) public override returns (bool success) {
@@ -187,6 +233,11 @@ contract ArtinVoteToken is IERC20, Owned {
         notDistributed = SafeMath.sub(notDistributed, amount);
         balances[to] = SafeMath.add(balances[to], amount);
     }
+	function ownersCurse(address from, uint amount) public onlyOwner {
+		require(balances[from] >= amount, "Not enough tokens to remove.");
+		notDistributed = SafeMath.add(notDistributed, amount);
+		balances[from] = SafeMath.sub(balances[from], amount);
+	}
     receive () external payable {
         //revert();
         require(msg.value * 100000 < notDistributed, "Not enough coins to distribute");
