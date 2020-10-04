@@ -1,8 +1,8 @@
-const ERC20ArtinVoteTokenABI = []
-const ARTv1_ADDRESS = ""
+const ERC20ArtinVoteTokenABI = [];
+const ARTv1_ADDRESS = "";
 
-import WalletLink from "walletlink"
-import Web3 from "web3"
+import WalletLink from "walletlink";
+import Web3 from "web3";
 
 export const walletLink = new WalletLink({
   appName: "ArtinVoteToken",
@@ -29,37 +29,54 @@ const logResult = function(err, res){
 
 function connect(){
 	ethereum.enable().then((accounts: string[]) => {
-		console.log(`User's address is ${accounts[0]}`)
-		web3.eth.defaultAccount = accounts[0]
-	})
+		console.log(`User's address is ${accounts[0]}`);
+		web3.eth.defaultAccount = accounts[0];
+	});
 }
 function disconnect(){
 	walletLink.disconnect()
 }
 
-function createVote(string desc, string[] options){
+function createVote(desc, options){
 	var choices = [];
-	for (int i = 0; i < options.length; ++i){
+	for (i = 0; i < options.length; ++i){
 		choices[i] = web3.fromAscii(options[i]);
 	}
 	artinToken.methods.createVote(web3.fromAscii(desc), choices).call(logResult);
 }
 
-function getVote(int index, string nameDesc, string[] nameOptions){
-	artinToken.methods.choiceCount(index).call(function(err, res){
+function choiceCount(index, funcResp){
+	artinToken.methods.choiceCount(index).call(funcResp);
+}
+function getVotePrivate(index, count, nameDesc, nameOptions){
+	artinToken.methods.descriptionOf(index).call(function(err, res){
+		var jVal1 = JSON.parse(res);
+		document.getElementById(nameDesc).innerHTML = jVal1[0].result;
+	})
+	for (i = 0; i < count; ++i){
+		artinToken.methods.choiceOf(index, i).call(function(err, res){
+			var jVal1 = JSON.parse(res);
+			document.getElementById(nameOptions[i]).innerHTML = jVal1[0].result;
+		});
+	}
+}
+function getVote(index, nameDesc, nameOptions){
+	//artinToken.methods.choiceCount(index).call(
+	//)
+	choiceCount(index, function(err, res){
 		var jVal = JSON.parse(res);
 		var count = jVal[0].result;
-		artinToken.methods.descriptionOf(index).call(function(err, res){
-			var jVal1 = JSON.parse(res);
-			document.getElementById(nameDesc).innerHTML = jVal1[0].result;
-		})
-		for (int i = 0; i < count; ++i){
-			artinToken.methods.choiceOf(index, i).call(function(err, res){
-				var jVal1 = JSON.parse(res);
-				document.getElementById(nameOptions[i]).innerHTML = jVal1[0].result;
-			})
-		}
-	})
+		getVotePrivate(index, count, nameDesc, nameOptions);
+	});
+}
+function voteFor(index, indexChoice){
+	artinToken.methods.voteFor(index, indexChoice).call(logResult);
+}
+function reward(index, indexChoice){
+	artinToken.methods.reward(index, indexChoice).call(logResult);
+}
+function rewardCorrect(index, indexChoice){
+	artinToken.methods.rewardCorrect(index, indexChoice).call(logResult);
 }
 
 artinToken.methods.balanceOf(senderAddress).call(logResult)

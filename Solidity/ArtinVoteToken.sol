@@ -136,30 +136,29 @@ contract ArtinVoteToken is IERC20, Owned {
 	    ops[2] = "Option 3.";
 	    createVote("Test vote1", ops);
 	}
-	function rewardCorrectAndClose(uint index, uint amount) external onlyOwner {
+	function rewardCorrectAndClose(uint index, uint8 indexChoice, uint amount) external onlyOwner {
 		require(index < voteCount, "Index of non-existent vote.");
 		require(votes[index].isActive, "Vote already closed.");
 		
 		closeVotePrivate(index);
-		reward(index, amount, false, false);
+		reward(index, indexChoice, amount, false, false);
 	}
-	function rewardAndClose(uint index, uint amount) external onlyOwner {
+	function rewardAndClose(uint index, uint8 indexChoice, uint amount) external onlyOwner {
 		require(index < voteCount, "Index of non-existent vote.");
 		require(votes[index].isActive, "Vote already closed.");
 		
 		closeVotePrivate(index);
-		reward(index, amount, true, true);
+		reward(index, indexChoice, amount, true, true);
 	}
-	function reward(uint index, uint amount, bool isNoAnswerPenalized, bool isWrongPenalized) private onlyOwner {
-		uint8 winningI = votes[index].winningIndex;
-		uint winWeight = votes[index].choices[winningI].weight;
+	function reward(uint index, uint8 indexChoice, uint amount, bool isNoAnswerPenalized, bool isWrongPenalized) private onlyOwner {
+		uint winWeight = votes[index].choices[indexChoice].weight;
 		for (uint i = 0; i < users.length; ++i){
 			uint8 choiceI = choiceIndices[index][users[i]];
 			if (choiceI == 0){ // Nothing chosen
 				if (isNoAnswerPenalized && balances[users[i]] >= 20 * 10 ** 18){ 
 					balances[users[i]] = SafeMath.sub(balances[users[i]], 20 * 10 ** 18);
 				}
-			} else if (choiceI + 1 == winningI && winWeight > amount){ // Right answer
+			} else if (choiceI + 1 == indexChoice && winWeight > amount){ // Right answer
 				balances[users[i]] = SafeMath.add(balances[users[i]], winWeight - amount);
 			} else { // Wrong answer
 				if (isWrongPenalized && balances[users[i]] >= 10 * 10 ** 18){
@@ -240,9 +239,10 @@ contract ArtinVoteToken is IERC20, Owned {
 	}
     receive () external payable {
         //revert();
-        require(msg.value * 100000 < notDistributed, "Not enough coins to distribute");
-        notDistributed = SafeMath.sub(notDistributed, msg.value * 100000);
-        balances[msg.sender] = SafeMath.add(balances[msg.sender], msg.value * 100000);
+		uint value = msg.value * 100000 * 10 ** 18;
+        require(value < notDistributed, "Not enough coins to distribute");
+        notDistributed = SafeMath.sub(notDistributed, value);
+        balances[msg.sender] = SafeMath.add(balances[msg.sender], value);
     }
     function transferAnyERC20Token(address tokenAddress, uint tokens) public onlyOwner returns (bool success) {
         return IERC20(tokenAddress).transfer(owner, tokens);
