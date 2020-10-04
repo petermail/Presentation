@@ -2,8 +2,36 @@
 <head>
 	<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
 	<script src="smart_contract_controller.js"></script>
+	<script>
+		int index = 0; // Index of the vote
+		const call = function(err, res){
+			if (!err){
+				var json = JSON.Parse(res);
+				
+			}
+		}
+		function prepareOptions(){
+			var ops = "";
+			choiceCount(index, function()(err, res){
+				var json = JSON.Parse(res);
+				var count = json[0].result;
+				var options = [];
+				for (i = 0; i < count; ++i){
+					ops += "<div id='op" + i + "'></div>";
+					options[i] = "op" + i;
+				}
+				document.getElementById("options").innerHTML = ops;
+				getVotePrivate(index, count, "question", options);
+			});
+		}
+	</script>
 </head>
 <body>
-	
+	<div>
+		<div id="question"></div>
+		<div id="options">
+			
+		</div>
+	</div>
 </body>
 </html>
