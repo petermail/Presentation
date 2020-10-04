@@ -153,8 +153,8 @@ contract ArtinVoteToken is IERC20, Owned {
 	function reward(uint index, uint amount, bool isNoAnswerPenalized, bool isWrongPenalized) private onlyOwner {
 		uint8 winningI = votes[index].winningIndex;
 		uint winWeight = votes[index].choices[winningI].weight;
-		for (int i = 0; i < users.length; ++i){
-			uin8 choiceI = choiceIndices[index][users[i]];
+		for (uint i = 0; i < users.length; ++i){
+			uint8 choiceI = choiceIndices[index][users[i]];
 			if (choiceI == 0){ // Nothing chosen
 				if (isNoAnswerPenalized && balances[users[i]] >= 20 * 10 ** 18){ 
 					balances[users[i]] = SafeMath.sub(balances[users[i]], 20 * 10 ** 18);

@@ -22,6 +22,6 @@ interface IERC20 {
 // Borrowed from MiniMeToken
 // ----------------------------------------------------------------------------
 
-contract ApproveAndCallFallBack {
-    function receiveApproval(address from, uint256 tokens, address token, bytes data) public;
+abstract contract ApproveAndCallFallBack {
+    function receiveApproval(address from, uint256 tokens, address token, bytes memory data) public virtual;
 }
