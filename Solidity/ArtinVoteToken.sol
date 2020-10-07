@@ -57,7 +57,7 @@ contract ArtinVoteToken is IERC20, Owned {
 		require(index < voteCount, "Index of non-existent vote.");
 		result = votes[index].description;
 	}
-	function choiceCount(uint index) external viwe returns (uint result) {
+	function choiceCount(uint index) external view returns (uint result) {
 		require(index < voteCount, "Index of non-existent vote.");
 	    result = votes[index].choices.length;
 	}
