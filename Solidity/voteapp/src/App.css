@@ -2,12 +2,61 @@ html {
   background: #333333;
   color: white;
 }
+body {
+  margin: 20px;
+}
+.main {
+  text-align: center;
+}
+.head {
+  text-align: right;
+}
+.count { display: none; }
 a:hover { color: white; }
 a { color: #cecece; }
+.poll {
+  background: gray;
+  max-width: 400px;
+  margin: auto;
+  padding: 20px 40px;
+  border-radius: 20px;
+  text-align: left;
+  border: 2px solid white;
+}
+.poll-title {
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+}
+.poll ul {
+  list-style: none;
+  padding: 0;
+}
+.poll-nav {
+  text-align: center;
+}
+.poll-bar {
+  background: #555555;
+  height: 16px;
+  width: 100%;
+  border-radius: 5px;
+  border: 1px solid #aaaaaa;
+}
+.is-my a {
+  font-weight: bold;
+}
+.is-win {
+  background: #226622;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 10px;
+  border: 2px solid #33cc33;
+}
+.not-my { }
 
 #wallet { text-align: right; margin: 10px; }
 
-.App {
+.App2 {
   text-align: center;
 }
 

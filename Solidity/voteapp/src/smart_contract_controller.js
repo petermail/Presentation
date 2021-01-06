@@ -657,7 +657,7 @@ export function sendSigned(raw, callback){
 }
 export async function sendSignedTx(ethereum, txObject){
   console.log(ethereum);
-  await ethereum.send({
+  await ethereum.request({
     method: 'eth_sendTransaction',
     params: [txObject]
   }, 
@@ -666,15 +666,19 @@ export async function sendSignedTx(ethereum, txObject){
   });
 }
 async function sendSignedTxAsync(ethereum, txObject, callback){
-  await ethereum.send({
+  await ethereum.request({
     method: 'eth_sendTransaction',
     params: [txObject]
   }, callback);
 }
-async function sendSignedTxWCAsync(provider, method, txObject){
+async function sendSignedTxWCAsync(provider, method, txObject, callback){
   console.log("method: ", method);
   console.log("txObject: ", txObject);
-  await provider.send(method, txObject);
+  if (provider.request){
+    await provider.request({ method: method, params: [txObject] }).then(callback);//, function(err, res){  });
+  } else {
+    await provider.send({ method: method, params: [txObject] }, callback);
+  }
 }
 
 export function createVote(eth, desc, options){
@@ -740,7 +744,7 @@ export function voteFor(eth, indexChoice, callback){
   getNonce(web3.eth.defaultAccount, (err, nonce) => {
     if (!err){
       var data = artinToken.methods.voteFor(index, indexChoice).encodeABI();
-      var txObj = getTxObject(nonce, 2100000, "30", data);
+      var txObj = getTxObject(nonce, 2100000, "12", data);
       sendSignedTxAsync(eth, txObj, callback);
     }
   });
@@ -750,8 +754,8 @@ export function voteForTemp(_web3, indexChoice, callback){
   getNonce(web3.eth.defaultAccount, (err, nonce) => {
     if (!err){
       var data = artinToken.methods.voteFor(index, indexChoice).encodeABI();
-      var txObj = getTxObject(nonce, 2100000, "30", data);
-      sendSignedTxWCAsync(_web3, "eth_sendTransaction", txObj);
+      var txObj = getTxObject(nonce, 2100000, "10", data);
+      sendSignedTxWCAsync(_web3, "eth_sendTransaction", txObj, callback);
     }
   });
 }
@@ -759,7 +763,7 @@ function transactionPrivate(eth, action){
   getNonce(web3.eth.defaultAccount, (err, nonce) => {
     if (!err){
       var data = action.encodeABI();
-      var txObj = getTxObject(nonce, 2100000, "30", data);
+      var txObj = getTxObject(nonce, 2100000, "11", data);
       sendSignedTx(eth, txObj);
     }
   });
@@ -853,6 +857,48 @@ export async function descriptionOfAsync(){
         }
       }
     )
+  });
+}
+export async function voteOfAsync(user){
+  return await makePromise((resolve) => {
+    artinToken.methods.voteOf(index, user).call(
+      function(err, res){
+        if (!err){
+          resolve(res);
+        }
+      }
+    )
+  });
+}
+export async function winningIndexOfAsync(){
+  return await makePromise((resolve) => {
+    artinToken.methods.winningIndexOf(index).call(
+      function(err, res){
+        if (!err){
+          resolve(res);
+        }
+      }
+    )
+  });
+}
+
+
+export function rewardCorrectAndCloseAsync(_web3, indexChoice, amount, callback){
+  getNonce(web3.eth.defaultAccount, (err, nonce) => {
+    if (!err){
+      var data = artinToken.methods.rewardCorrectAndClose(index, indexChoice, web3.utils.toWei(amount.toString())).encodeABI();
+      var txObj = getTxObject(nonce, 2100000, "10", data);
+      sendSignedTxWCAsync(_web3, "eth_sendTransaction", txObj, callback);
+    }
+  });
+}
+export function rewardAndCloseAsync(_web3, indexChoice, amount, callback){
+  getNonce(web3.eth.defaultAccount, (err, nonce) => {
+    if (!err){
+      var data = artinToken.methods.rewardAndClose(index, indexChoice, web3.utils.toWei(amount.toString())).encodeABI();
+      var txObj = getTxObject(nonce, 2100000, "10", data);
+      sendSignedTxWCAsync(_web3, "eth_sendTransaction", txObj, callback);
+    }
   });
 }
 	
