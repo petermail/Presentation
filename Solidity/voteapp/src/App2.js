@@ -133,7 +133,6 @@ export default class App2 extends Component{
             this.setState({ balance: web3.utils.fromWei("" + res, 'ether') });
           } else { console.log("Balance error: ", err); }
         });
-
         
     this.loadWinning();
     this.loadPoll();
@@ -336,7 +335,7 @@ export default class App2 extends Component{
           }
           {
             !this.state.wallet &&
-              <div><a href="#" onClick={this.connect(this.state.index)}>connect</a></div>
+              <div><a href="#" onClick={() => this.connect(this.state.index)}>connect</a></div>
           }
           { 
             <div>balance: {this.state.balance} ARTv1</div>
