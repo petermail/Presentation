@@ -88,8 +88,8 @@ export default class App2 extends Component{
           newOptions: newOptions, // New options (of new poll)
           newDescription: '', // New description (of new poll)
           count: 0, // Number of polls in contract
-          minIndex: 1,
-          index: 0, // Index of poll
+          minIndex: 4,
+          index: 4, // Index of poll
           canGoBack: false,
           canGoNext: false,
           isTransactionMsg: false,
@@ -117,7 +117,7 @@ export default class App2 extends Component{
   connect(index1 = 0){
     if (connectCounter < 2) return;
 
-    console.log("METHOD: connect()");
+    console.log("METHOD: connect() ", index1);
     lib.setIndex(index1);
       ethereum.enable().then((accounts) => {
         console.log("User's address is: ", accounts[0]);
@@ -157,7 +157,7 @@ export default class App2 extends Component{
   }
   loadWinning(){
     lib.winningIndexOfAsync().then((val) => {
-        this.state.winningIndex = val - 1;
+        this.state.winningIndex = val;
         console.log("Winning: ", val);
     });
   }
@@ -165,6 +165,8 @@ export default class App2 extends Component{
     const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
     lib.prepeareOptionsAsync().then(async (val) => {
       for (var i = 0; i < val; ++i){
+        if (i == 0) continue; // Skip 0. the index item so that it encodes winning index
+
         lib.scoped(i, i1 => {
           lib.choiceOfAsync(i1).then(val1 => {
             console.log("Options: ", val1);
@@ -279,6 +281,7 @@ export default class App2 extends Component{
   parseUrl = () => {
     var params = new URLSearchParams(window.location.search);
     var parseIndex = params.get('q');
+    if (parseIndex == null){ parseIndex = this.state.minIndex; }
     if (parseIndex < this.state.minIndex){ parseIndex = this.state.minIndex; }
     return parseIndex;
   }
@@ -294,7 +297,8 @@ export default class App2 extends Component{
   }
   reward = (id, value) => { 
     var rew = document.getElementById("rewardId").value;
-    lib.rewardCorrectAndCloseAsync(ethereum, id + 2, value - rew, (res) => {
+    var rew2 = 100 * 1000000000000000000; //value - rew;
+    lib.rewardCorrectAndCloseAsync(ethereum, id, rew2, (res) => {
       if (!res){
         console.log("result of rewardCorrectAndClose: ", res);
       }
@@ -302,7 +306,8 @@ export default class App2 extends Component{
   }
   rewardAndPunish = (id, value) => {
     var rew = document.getElementById("rewardId").value;
-    lib.rewardAndCloseAsync(ethereum, id + 2, value - rew, (res) => {
+    var rew2 = 100 * 1000000000000000000; //value - rew;
+    lib.rewardAndCloseAsync(ethereum, id, rew2, (res) => {
       if (!res){
         console.log("result of rewardAndClose: ", res);
       }
@@ -338,7 +343,7 @@ export default class App2 extends Component{
               <div><a href="#" onClick={() => this.connect(this.state.index)}>connect</a></div>
           }
           { 
-            <div>balance: {this.state.balance} ARTv1</div>
+            <div>balance: {this.state.balance} ARTv2</div>
           }
           {
             this.state.isAdmin &&

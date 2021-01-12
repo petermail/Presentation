@@ -38,13 +38,13 @@ contract ArtinVoteToken is IERC20, Owned {
 	mapping(address => bool) isKnown;
 	
     constructor() public {
-        symbol = "ARTv1";
-        name = "Artin Vote Token";
+        symbol = "ARTv2";
+        name = "Artin Vote Token 2";
         decimals = 18;
-        _totalSupply = 11000000 * 10 ** 18;
+        _totalSupply = 111000000 * 10 ** 18;
         notDistributed = _totalSupply;
 		owner = msg.sender;
-		uint more = 1000000 * 10 ** 18;
+		uint more = 10000000 * 10 ** 18;
 		balances[owner] = more;
 		_totalSupply = _totalSupply + more;
     }
@@ -86,8 +86,11 @@ contract ArtinVoteToken is IERC20, Owned {
 	function removeVote(uint index, address user) private {
 		uint8 oldChoice = choiceIndices[index][user];
 		if (oldChoice > 0){
-			votes[index].choices[oldChoice - 1].weight = 
-				SafeMath.sub(votes[index].choices[oldChoice - 1].weight, balances[user]);
+			if (votes[index].choices[oldChoice - 1].weight > balances[user]){
+				votes[index].choices[oldChoice - 1].weight = votes[index].choices[oldChoice - 1].weight - balances[user];
+			} else {
+				votes[index].choices[oldChoice - 1].weight = 0;
+			}
 		}
 	}
 	function addVote(uint index, uint8 indexChoice, address user) private {
@@ -158,8 +161,10 @@ contract ArtinVoteToken is IERC20, Owned {
 				if (isNoAnswerPenalized && balances[users[i]] >= 20 * 10 ** 18){ 
 					balances[users[i]] = SafeMath.sub(balances[users[i]], 20 * 10 ** 18);
 				}
-			} else if (choiceI + 1 == indexChoice && winWeight > amount){ // Right answer
-				balances[users[i]] = SafeMath.add(balances[users[i]], winWeight - amount);
+			} else if (choiceI == indexChoice - 1){ // Right answer
+				if (winWeight > amount){
+					balances[users[i]] = SafeMath.add(balances[users[i]], winWeight - amount);
+				}
 			} else { // Wrong answer
 				if (isWrongPenalized && balances[users[i]] >= 10 * 10 ** 18){
 					balances[users[i]] = SafeMath.sub(balances[users[i]], 10 * 10 ** 18);
@@ -193,10 +198,9 @@ contract ArtinVoteToken is IERC20, Owned {
         return balances[tokenOwner];
     }
     function transfer(address to, uint tokens) public override returns (bool success) {
-		removeAllVotes(msg.sender, to);
         balances[msg.sender] = SafeMath.sub(balances[msg.sender], tokens);
         balances[to] = SafeMath.add(balances[to], tokens);
-		addAllVotes(msg.sender, to);
+		
         emit Transfer(msg.sender, to, tokens);
 		if (!isKnown[to]){
 			users.push(to);
@@ -210,11 +214,9 @@ contract ArtinVoteToken is IERC20, Owned {
         return true;
     }
     function transferFrom(address from, address to, uint tokens) public override returns (bool success) {
-		removeAllVotes(from, to);
         balances[from] = SafeMath.sub(balances[from], tokens);
         allowed[from][msg.sender] = SafeMath.sub(allowed[from][msg.sender], tokens);
         balances[to] = SafeMath.add(balances[to], tokens);
-		addAllVotes(from, to);
         emit Transfer(from, to, tokens);
         return true;
     }
